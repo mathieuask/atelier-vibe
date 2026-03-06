@@ -216,7 +216,7 @@ function PostCard({
 
         {/* Message */}
         {sig.message && (
-          <p className={`text-xs leading-relaxed mb-3 line-clamp-4 ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+          <p className={`text-xs leading-relaxed mb-3 ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
             {sig.message}
           </p>
         )}
