@@ -25,6 +25,7 @@ interface Signature {
   id: string;
   prenom: string;
   nom: string;
+  email: string;
   programme: string;
   message: string;
   likes_count: number;
@@ -205,13 +206,18 @@ function PostCard({
         }}
       >
         {/* Header */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className={`text-sm font-semibold truncate ${dark ? "text-zinc-100" : "text-zinc-800"}`}>
-            {sig.prenom} {sig.nom.charAt(0)}.
-          </span>
-          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border shrink-0 ${colors[sig.programme] || colors["Autre"]}`}>
-            {sig.programme}
-          </span>
+        <div className="mb-2">
+          <div className="flex items-center gap-2">
+            <span className={`text-sm font-semibold truncate ${dark ? "text-zinc-100" : "text-zinc-800"}`}>
+              {sig.prenom} {sig.nom}
+            </span>
+            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border shrink-0 ${colors[sig.programme] || colors["Autre"]}`}>
+              {sig.programme}
+            </span>
+          </div>
+          <div className={`text-[10px] mt-0.5 ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+            {sig.email}
+          </div>
         </div>
 
         {/* Message */}

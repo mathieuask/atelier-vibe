@@ -6,7 +6,7 @@ export async function GET() {
     const supabase = getSupabase();
     const { data, count, error } = await supabase
       .from("signatures")
-      .select("id, prenom, nom, programme, message, likes_count, created_at", { count: "exact" })
+      .select("id, prenom, nom, email, programme, message, likes_count, created_at", { count: "exact" })
       .order("created_at", { ascending: true });
 
     if (error) {
