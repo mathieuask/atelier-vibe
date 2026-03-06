@@ -35,9 +35,9 @@ type ReactionsMap = Record<string, Record<string, number>>;
 type UserReactionsMap = Record<string, Record<string, string[]>>;
 
 // Card dimensions + spacing to prevent overlap
-const CELL_W = 290; // 240px card + 50px gap
-const CELL_H = 230; // ~180px card + 50px gap
-const PADDING = 80;  // edge padding
+const CELL_W = 340; // 240px card + 100px gap
+const CELL_H = 280; // ~180px card + 100px gap
+const PADDING = 160; // edge padding
 const MIN_ZOOM = 0.3;
 const MAX_ZOOM = 1.5;
 
@@ -72,9 +72,9 @@ function getPosition(sig: Signature, index: number, total: number) {
   const { cols } = getGridSize(total);
   const col = index % cols;
   const row = Math.floor(index / cols);
-  // Small jitter within safe bounds (max ±20px so cards never overlap)
-  const jitterX = (seededRandom(seed + "x") - 0.5) * 40;
-  const jitterY = (seededRandom(seed + "y") - 0.5) * 40;
+  // Small jitter within safe bounds (max ±30px so cards never overlap)
+  const jitterX = (seededRandom(seed + "x") - 0.5) * 60;
+  const jitterY = (seededRandom(seed + "y") - 0.5) * 60;
   const x = PADDING + col * CELL_W + jitterX;
   const y = PADDING + row * CELL_H + jitterY;
   const rotation = seededRandom(seed + "r") * 6 - 3;
@@ -306,7 +306,7 @@ export default function Home() {
   const [userReactions, setUserReactions] = useState<UserReactionsMap>({});
 
   // Map pan/zoom state
-  const [zoom, setZoom] = useState(0.6);
+  const [zoom, setZoom] = useState(0.85);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const mapRef = useRef<HTMLDivElement>(null);
   const panState = useRef({ panning: false, startX: 0, startY: 0, ox: 0, oy: 0 });
@@ -317,9 +317,10 @@ export default function Home() {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const { canvasW, canvasH } = getGridSize(Math.max(1, signatures.length));
+    const initZoom = 0.85;
     setPan({
-      x: (vw - canvasW * 0.6) / 2,
-      y: (vh - canvasH * 0.6) / 2,
+      x: (vw - canvasW * initZoom) / 2,
+      y: (vh - canvasH * initZoom) / 2,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
