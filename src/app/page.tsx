@@ -550,7 +550,7 @@ export default function Home() {
       <div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-amber-400 z-50" />
 
       {/* Header */}
-      <header className="fixed top-4 left-4 max-[480px]:left-3 max-[480px]:top-3 z-40 animate-fade-in-up flex items-center gap-3 max-[480px]:gap-2">
+      <header className="fixed top-4 left-6 max-[480px]:left-4 max-[480px]:top-3 z-40 animate-fade-in-up flex items-center gap-3 max-[480px]:gap-2">
         <div>
           <h1 className={`text-lg max-[480px]:text-sm font-semibold tracking-tight ${dark ? "text-zinc-100" : "text-zinc-900"}`}>
             Vibe Coding{" "}
