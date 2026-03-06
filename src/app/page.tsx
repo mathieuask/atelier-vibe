@@ -325,11 +325,17 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const updateThemeColor = (isDark: boolean) => {
+    const color = isDark ? "#0a0a0a" : "#ffffff";
+    document.querySelectorAll('meta[name="theme-color"]').forEach((el) => el.setAttribute("content", color));
+  };
+
   useEffect(() => {
     const stored = localStorage.getItem("vibe-dark");
     if (stored === "true") {
       setDark(true);
       document.documentElement.classList.add("dark");
+      updateThemeColor(true);
     }
   }, []);
 
@@ -339,6 +345,7 @@ export default function Home() {
       localStorage.setItem("vibe-dark", String(next));
       if (next) document.documentElement.classList.add("dark");
       else document.documentElement.classList.remove("dark");
+      updateThemeColor(next);
       return next;
     });
   };
@@ -369,11 +376,17 @@ export default function Home() {
     return () => el.removeEventListener("wheel", handler);
   }, []);
 
+  // Keep refs in sync for pinch handler (avoids stale closures)
+  const zoomRef = useRef(zoom);
+  const panRef = useRef(pan);
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+  useEffect(() => { panRef.current = pan; }, [pan]);
+
   // Pinch-to-zoom for touch devices
-  const pinchState = useRef({ active: false, startDist: 0, startZoom: 0, midX: 0, midY: 0 });
+  const pinchState = useRef({ active: false, prevDist: 0, prevMidX: 0, prevMidY: 0 });
   useEffect(() => {
     const el = mapRef.current;
-    if (!el || !isTouchDevice()) return;
+    if (!el) return;
 
     const getDist = (t: TouchList) => {
       const dx = t[1].clientX - t[0].clientX;
@@ -385,31 +398,45 @@ export default function Home() {
       if (e.touches.length === 2) {
         e.preventDefault();
         pinchState.current.active = true;
-        pinchState.current.startDist = getDist(e.touches);
-        pinchState.current.startZoom = zoom;
-        pinchState.current.midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-        pinchState.current.midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        pinchState.current.prevDist = getDist(e.touches);
+        pinchState.current.prevMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        pinchState.current.prevMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
       }
     };
 
     const onTouchMove = (e: TouchEvent) => {
       if (!pinchState.current.active || e.touches.length !== 2) return;
       e.preventDefault();
-      const dist = getDist(e.touches);
-      const scale = dist / pinchState.current.startDist;
-      const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, pinchState.current.startZoom * scale));
-      const zoomScale = newZoom / zoom;
-      const mx = pinchState.current.midX;
-      const my = pinchState.current.midY;
 
-      setPan((prevPan) => ({
-        x: mx - zoomScale * (mx - prevPan.x),
-        y: my - zoomScale * (my - prevPan.y),
-      }));
+      const dist = getDist(e.touches);
+      const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+
+      // Incremental scale from previous frame
+      const scaleFactor = dist / pinchState.current.prevDist;
+      const curZoom = zoomRef.current;
+      const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, curZoom * scaleFactor));
+      const actualScale = newZoom / curZoom;
+
+      // Pan: combine zoom-toward-midpoint + finger movement
+      const dmx = midX - pinchState.current.prevMidX;
+      const dmy = midY - pinchState.current.prevMidY;
+      const curPan = panRef.current;
+
+      const newPanX = midX - actualScale * (midX - curPan.x) + dmx * (1 - actualScale);
+      const newPanY = midY - actualScale * (midY - curPan.y) + dmy * (1 - actualScale);
+
+      setPan({ x: newPanX, y: newPanY });
       setZoom(newZoom);
+
+      pinchState.current.prevDist = dist;
+      pinchState.current.prevMidX = midX;
+      pinchState.current.prevMidY = midY;
     };
 
-    const onTouchEnd = () => { pinchState.current.active = false; };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) pinchState.current.active = false;
+    };
 
     el.addEventListener("touchstart", onTouchStart, { passive: false });
     el.addEventListener("touchmove", onTouchMove, { passive: false });
@@ -419,12 +446,15 @@ export default function Home() {
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, [zoom]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Pan handlers (on the map container)
   const onMapPointerDown = (e: React.PointerEvent) => {
     // Only pan on direct clicks on the map bg, not on cards
     if (e.target !== e.currentTarget && !(e.target as HTMLElement).classList.contains("map-canvas")) return;
+    // Don't start panning during a pinch gesture
+    if (pinchState.current.active) return;
     panState.current.panning = true;
     panState.current.startX = e.clientX;
     panState.current.startY = e.clientY;
