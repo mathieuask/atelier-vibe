@@ -180,6 +180,7 @@ function PostCard({
   return (
     <div
       ref={outerRef}
+      data-card
       className={`absolute ${animDone ? "" : "animate-pop-in"}`}
       onAnimationEnd={() => setAnimDone(true)}
       style={{
@@ -451,8 +452,8 @@ export default function Home() {
 
   // Pan handlers (on the map container)
   const onMapPointerDown = (e: React.PointerEvent) => {
-    // Only pan on direct clicks on the map bg, not on cards
-    if (e.target !== e.currentTarget && !(e.target as HTMLElement).classList.contains("map-canvas")) return;
+    // Don't pan if clicking on a card (cards have data-card attribute)
+    if ((e.target as HTMLElement).closest("[data-card]")) return;
     // Don't start panning during a pinch gesture
     if (pinchState.current.active) return;
     panState.current.panning = true;
@@ -460,7 +461,6 @@ export default function Home() {
     panState.current.startY = e.clientY;
     panState.current.ox = pan.x;
     panState.current.oy = pan.y;
-    // Always capture on the outer mapRef so move/up events fire correctly
     mapRef.current?.setPointerCapture(e.pointerId);
   };
 
@@ -590,7 +590,7 @@ export default function Home() {
             <span className={dark ? "text-zinc-500 font-normal" : "text-zinc-400 font-normal"}>à NEOMA</span>
           </h1>
           <p className={`text-xs max-[480px]:text-[10px] mt-0.5 ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
-            Ateliers gratuits avec Martin Bonan
+            Ateliers gratuits
           </p>
         </div>
         <button
@@ -661,9 +661,6 @@ export default function Home() {
             transformOrigin: "0 0",
             position: "relative",
           }}
-          onPointerDown={onMapPointerDown}
-          onPointerMove={onMapPointerMove}
-          onPointerUp={onMapPointerUp}
         >
           {positioned.map((sig, i) => (
             <PostCard
@@ -828,9 +825,6 @@ export default function Home() {
         </>
       )}
 
-      <div className={`fixed bottom-3 right-4 z-30 text-[10px] ${dark ? "text-zinc-700" : "text-zinc-300"}`}>
-        Une initiative étudiante pour NEOMA
-      </div>
     </div>
   );
 }
