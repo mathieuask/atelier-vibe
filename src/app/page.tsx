@@ -460,11 +460,14 @@ export default function Home() {
     panState.current.startY = e.clientY;
     panState.current.ox = pan.x;
     panState.current.oy = pan.y;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    // Always capture on the outer mapRef so move/up events fire correctly
+    mapRef.current?.setPointerCapture(e.pointerId);
   };
 
   const onMapPointerMove = (e: React.PointerEvent) => {
     if (!panState.current.panning) return;
+    // Stop panning if a pinch started
+    if (pinchState.current.active) { panState.current.panning = false; return; }
     setPan({
       x: panState.current.ox + (e.clientX - panState.current.startX),
       y: panState.current.oy + (e.clientY - panState.current.startY),
